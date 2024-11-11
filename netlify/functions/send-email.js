@@ -1,11 +1,9 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
-exports.handler = async (event) => {
-  // Parse the request body
+export async function handler(event) {
   const { recipientEmail, firstName, orderId, totalPrice } = JSON.parse(event.body);
 
   try {
-    // Send the email using Mailjet API
     const response = await fetch('https://api.mailjet.com/v3.1/send', {
       method: 'POST',
       headers: {
@@ -16,7 +14,8 @@ exports.handler = async (event) => {
         Messages: [
           {
             From: {
-              Email: "lesenokbags@gmail.com",
+              Email: "your-email@example.com",
+              Name: "Your Name"
             },
             To: [
               {
@@ -24,8 +23,9 @@ exports.handler = async (event) => {
                 Name: firstName
               }
             ],
-            TemplateID: 6460031,
+            TemplateID: your_template_id,
             TemplateLanguage: true,
+            Subject: "Your Subject Here",
             Variables: {
               first_name: firstName,
               order_id: orderId,
@@ -50,4 +50,4 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: error.message }),
     };
   }
-};
+}
