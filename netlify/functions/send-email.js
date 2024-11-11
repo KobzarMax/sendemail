@@ -12,15 +12,24 @@ exports.handler = async (event) => {
 
   try {
     // Parse the request body
-    const { to, subject, text } = JSON.parse(event.body);
+    const { email, name, surname, orderNumber, formattedTotalPrice, formattedOrderItems } = JSON.parse(event.body);
 
     // Construct the email message
     const msg = {
-      to,
-      from: 'lesenokbags@gmail.com', // Your verified sender email on SendGrid
-      subject: subject || 'Default Subject',
-      text: text || 'Default Email Body',
-    };
+        personalizations: [
+          {
+            to: [{ email }],
+            dynamic_template_data: {
+              first_name: `${name} ${surname}`,
+              order_id: orderNumber,
+              total_price: formattedTotalPrice,
+              order_items: formattedOrderItems,
+            },
+          },
+        ],
+        from: { email: 'lesenokbags@gmail.com' },
+        template_id: 'd-94b1142e7c0e4e9dbacb9cb7ce646514', // Use your actual SendGrid template ID
+      };
 
     // Send the email
     await sgMail.send(msg);
