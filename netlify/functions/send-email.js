@@ -1,52 +1,42 @@
-import fetch from 'node-fetch';
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-export async function handler(event) {
-  const { recipientEmail, firstName, orderId, totalPrice } = JSON.parse(event.body);
-
-  try {
-    const response = await fetch('https://api.mailjet.com/v3.1/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${btoa(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`)}`
-      },
-      body: JSON.stringify({
-        Messages: [
-          {
-            From: {
-              Email: "lesenokbags@gmail.com",
-            },
-            To: [
-              {
-                Email: recipientEmail,
-                Name: firstName
-              }
-            ],
-            TemplateID: "6460031",
-            Variables: {
-              first_name: firstName,
-              order_id: orderId,
-              total_price: totalPrice
-            }
-          }
-        ]
-      })
-    });
-
-    console.log(response)
-
-    if (!response.ok) {
-      throw new Error('Failed to send email');
-    }
-
+exports.handler = async (event) => {
+  // Ensure this is a POST request
+  if (event.httpMethod !== 'POST') {
     return {
-      statusCode: 200,
-      body: JSON.stringify({ message: 'Email sent successfully' }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      statusCode: 405,
+      body: JSON.stringify({ message: 'Method Not Allowed' }),
     };
   }
-}
+
+  try {
+    // Parse the request body
+    const { to, subject, text } = JSON.parse(event.body);
+
+    // Construct the email message
+    const msg = {
+      to,
+      from: 'lesenokbags@gmail.com', // Your verified sender email on SendGrid
+      subject: subject || 'Default Subject',
+      text: text || 'Default Email Body',
+    };
+
+    // Send the email
+    await sgMail.send(msg);
+
+    // Return a success response
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Email sent successfully!' }),
+    };
+  } catch (error) {
+    console.error(error);
+
+    // Return an error response
+    return {
+      statusCode: error.code || 500,
+      body: JSON.stringify({ error: error.message || 'Failed to send email' }),
+    };
+  }
+};
