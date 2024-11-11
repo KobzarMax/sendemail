@@ -10,6 +10,21 @@ exports.handler = async (event) => {
     };
   }
 
+  const allowedOrigin = "https://lesenokbags-ua.webflow.io";
+
+  // Check the request method and respond to preflight requests
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": allowedOrigin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: JSON.stringify({ message: "CORS preflight response" }),
+    };
+  }
+
   try {
     // Parse the request body
     const { email, name, surname, orderNumber, formattedTotalPrice, formattedOrderItems } = JSON.parse(event.body);
