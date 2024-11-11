@@ -14,8 +14,7 @@ export async function handler(event) {
         Messages: [
           {
             From: {
-              Email: "your-email@example.com",
-              Name: "Your Name"
+              Email: "lesenokbags@gmail.com",
             },
             To: [
               {
@@ -23,9 +22,7 @@ export async function handler(event) {
                 Name: firstName
               }
             ],
-            TemplateID: your_template_id,
-            TemplateLanguage: true,
-            Subject: "Your Subject Here",
+            TemplateID: "6460031",
             Variables: {
               first_name: firstName,
               order_id: orderId,
