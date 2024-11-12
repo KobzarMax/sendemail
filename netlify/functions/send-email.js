@@ -2,9 +2,7 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.handler = async (event) => {
-  const allowedOrigins = ["https://lesenokbags-ua.webflow.io", "https://www.lesenok.ua"];
-  const origin = event.headers.origin;
-  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  const allowedOrigin = "https://www.lesenok.ua";
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === "OPTIONS") {
