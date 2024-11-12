@@ -46,7 +46,7 @@ exports.handler = async (event) => {
           to: [{ email }],
           dynamic_template_data: {
             first_name: `${name} ${surname}`,
-            order_id: orderNumber,
+            order_id: orderNumber.toString(),
             total_price: formattedTotalPrice,
             order_items: orderItemsString, // Pass as formatted string
           },
