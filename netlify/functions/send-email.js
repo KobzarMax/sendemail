@@ -34,16 +34,6 @@ exports.handler = async (event) => {
     // Parse and validate the request body
     const { email, name, surname, orderNumber, formattedTotalPrice, formattedOrderItems } = JSON.parse(event.body);
 
-    if (!email || !name || !surname || !orderNumber || !formattedTotalPrice || !formattedOrderItems) {
-      return {
-        statusCode: 400,
-        headers: {
-          "Access-Control-Allow-Origin": allowedOrigin,
-        },
-        body: JSON.stringify({ message: "Missing required fields in request body" }),
-      };
-    }
-
     // Convert formattedOrderItems to a single formatted string
     const orderItemsString = formattedOrderItems
       .map(item => `• ${item.itemName}, - ${item.itemQuantity} x ${item.itemPrice}`)
