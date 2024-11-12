@@ -44,6 +44,11 @@ exports.handler = async (event) => {
       };
     }
 
+    // Convert formattedOrderItems to a single formatted string
+    const orderItemsString = formattedOrderItems
+      .map(item => `• ${item.itemName}, - ${item.itemQuantity} x ${item.itemPrice}`)
+      .join("\n");
+
     // Construct the email message
     const msg = {
       personalizations: [
@@ -53,7 +58,7 @@ exports.handler = async (event) => {
             first_name: `${name} ${surname}`,
             order_id: orderNumber,
             total_price: formattedTotalPrice,
-            order_items: formattedOrderItems,
+            order_items: orderItemsString, // Pass as formatted string
           },
         },
       ],
