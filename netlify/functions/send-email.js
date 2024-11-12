@@ -2,7 +2,9 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.handler = async (event) => {
-  const allowedOrigin = "https://lesenokbags-ua.webflow.io";
+  const allowedOrigins = ["https://lesenokbags-ua.webflow.io", "https://www.lesenok.ua"];
+  const origin = event.headers.origin;
+  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === "OPTIONS") {
@@ -29,8 +31,18 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Parse the request body
+    // Parse and validate the request body
     const { email, name, surname, orderNumber, formattedTotalPrice, formattedOrderItems } = JSON.parse(event.body);
+
+    if (!email || !name || !surname || !orderNumber || !formattedTotalPrice || !formattedOrderItems) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": allowedOrigin,
+        },
+        body: JSON.stringify({ message: "Missing required fields in request body" }),
+      };
+    }
 
     // Construct the email message
     const msg = {
@@ -46,7 +58,7 @@ exports.handler = async (event) => {
         },
       ],
       from: { email: 'lesenokbags@gmail.com' },
-      template_id: 'd-94b1142e7c0e4e9dbacb9cb7ce646514', // Replace with your actual SendGrid template ID
+      template_id: process.env.SENDGRID_TEMPLATE_ID,
     };
 
     // Send the email
@@ -61,7 +73,11 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'Email sent successfully!' }),
     };
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", {
+      message: error.message,
+      code: error.code,
+      response: error.response && error.response.body
+    });
 
     // Return an error response
     return {
