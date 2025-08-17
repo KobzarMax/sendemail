@@ -1,6 +1,6 @@
 const Mailjet = require("node-mailjet");
 
-const mailjet = Mailjet.apiConnect(
+const mailjet = Mailjet.connect(
   process.env.MJ_APIKEY_PUBLIC,
   process.env.MJ_APIKEY_PRIVATE
 );
