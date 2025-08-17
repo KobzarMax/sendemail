@@ -91,6 +91,21 @@ exports.handler = async (event) => {
       )
       .join("\n");
 
+    const htmlContent = `
+      <h3>Вітаємо, ${name} ${surname}!</h3>
+      <p>Дякуємо за ваше замовлення в магазині товарів для велотуризму <a href="https://www.lesenok.ua">lesenok.ua</a>!</p>
+      <p>Ваше замовлення #${orderNumber} успішно отримано та обробляється. Нижче наведено перелік товарів, які ви обрали:</p>
+      <h4>Перелік замовлених товарів:</h4>
+      <p>${orderItemsString}</p>
+      <h4>Загальна сума: ${formattedTotalPrice}</h4>
+      <h4>Коментар: ${comments || "Без коментарів"}</h4>
+      <p>Ми підготуємо ваше замовлення до відправлення найближчим часом і зв'яжемося з вами для підтвердження деталей доставки.</p>
+      <p>Якщо у вас виникнуть запитання або буде потрібна допомога, звертайтеся до нашої служби підтримки за телефоном +38 (099) 09 02 947 або на електронну пошту lesenokbags@gmail.com.</p>
+      <p>Дякуємо, що обрали <a href="https://www.lesenok.ua">lesenok.ua</a> для своїх велопригод. Бажаємо вам приємних подорожей!</p>
+      <p>З повагою,</p>
+      <p>Команда <a href="https://www.lesenok.ua">lesenok.ua</a></p>
+    `;
+
     await mailjet.post("send", { version: "v3.1" }).request({
       Messages: [
         {
@@ -99,15 +114,8 @@ exports.handler = async (event) => {
             Name: "Lesenok Bags",
           },
           To: [{ Email: email, Name: `${name} ${surname}` }],
-          TemplateID: 12454498,
-          TemplateLanguage: true,
-          Variables: {
-            firstname: `${name} ${surname}`,
-            order_id: orderNumber,
-            comments: comments || "Без коментарів",
-            total_price: formattedTotalPrice,
-            order_items: orderItemsString,
-          },
+          Subject: `Ваше замовлення #${orderNumber}`,
+          HtmlPart: htmlContent,
         },
       ],
     });
