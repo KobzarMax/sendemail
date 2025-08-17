@@ -10,16 +10,23 @@ const allowedOrigins = [
   "https://www.lesenok.ua",
 ];
 
-function getCorsHeaders() {
-  return {
+function getCorsHeaders(origin) {
+  const headers = {
     "Access-Control-Allow-Headers": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
+
+  if (allowedOrigins.includes(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+
+  return headers;
 }
 
 exports.handler = async (event) => {
-  const corsHeaders = getCorsHeaders();
+  const origin = event.headers.origin;
+  const corsHeaders = getCorsHeaders(origin);
 
   // Preflight OPTIONS
   if (event.httpMethod === "OPTIONS") {
@@ -36,6 +43,14 @@ exports.handler = async (event) => {
       statusCode: 405,
       headers: corsHeaders,
       body: JSON.stringify({ message: "Method Not Allowed" }),
+    };
+  }
+
+  // Block non-allowed origins
+  if (!allowedOrigins.includes(origin)) {
+    return {
+      statusCode: 403,
+      body: JSON.stringify({ message: "Forbidden" }),
     };
   }
 
@@ -88,7 +103,7 @@ exports.handler = async (event) => {
     console.error("Error sending email:", error);
     return {
       statusCode: 500,
-      headers: corsHeaders, // ✅ ensure headers on error too
+      headers: corsHeaders,
       body: JSON.stringify({ error: error.message || "Failed to send email" }),
     };
   }
