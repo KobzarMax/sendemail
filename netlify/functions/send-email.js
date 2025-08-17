@@ -54,36 +54,6 @@ exports.handler = async (event) => {
       comments,
     } = JSON.parse(event.body);
 
-    // Validation: check for empty variables
-    const requiredFields = {
-      email,
-      name,
-      surname,
-      orderNumber,
-      formattedTotalPrice,
-      formattedOrderItems,
-    };
-
-    const emptyFields = Object.entries(requiredFields)
-      .filter(
-        ([key, value]) =>
-          value === undefined ||
-          value === null ||
-          value === "" ||
-          (Array.isArray(value) && value.length === 0)
-      )
-      .map(([key]) => key);
-
-    if (emptyFields.length > 0) {
-      return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({
-          message: `Missing or empty fields: ${emptyFields.join(", ")}`,
-        }),
-      };
-    }
-
     const orderItemsString = formattedOrderItems
       .map(
         (item) =>
