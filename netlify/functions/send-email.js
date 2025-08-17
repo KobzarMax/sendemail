@@ -5,42 +5,45 @@ const mailjet = Mailjet.apiConnect(
   process.env.MJ_APIKEY_PRIVATE
 );
 
-exports.handler = async (event) => {
-  const allowedOrigins = [
-    "https://lesenokbags-ua.webflow.io",
-    "https://www.lesenok.ua",
-  ];
-  const origin = event.headers.origin;
+const allowedOrigins = [
+  "https://lesenokbags-ua.webflow.io",
+  "https://www.lesenok.ua",
+];
+
+function getCorsHeaders(origin) {
   const allowedOrigin = allowedOrigins.includes(origin)
     ? origin
     : allowedOrigins[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
 
-  // Handle preflight OPTIONS request
+exports.handler = async (event) => {
+  const origin = event.headers.origin || "";
+  const corsHeaders = getCorsHeaders(origin);
+
+  // Preflight OPTIONS
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": allowedOrigin,
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-      body: JSON.stringify({ message: "CORS preflight response" }),
+      headers: corsHeaders,
+      body: JSON.stringify({ message: "CORS preflight ok" }),
     };
   }
 
-  // Ensure this is a POST request
+  // Block non-POST
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      headers: {
-        "Access-Control-Allow-Origin": allowedOrigin,
-      },
+      headers: corsHeaders,
       body: JSON.stringify({ message: "Method Not Allowed" }),
     };
   }
 
   try {
-    // Parse the request body
     const {
       email,
       name,
@@ -58,26 +61,20 @@ exports.handler = async (event) => {
       )
       .join("\n");
 
-    // Construct Mailjet message
-    const request = mailjet.post("send", { version: "v3.1" }).request({
+    await mailjet.post("send", { version: "v3.1" }).request({
       Messages: [
         {
           From: {
             Email: "lesenokbags@gmail.com",
             Name: "Lesenok Bags",
           },
-          To: [
-            {
-              Email: email,
-              Name: `${name} ${surname}`,
-            },
-          ],
-          TemplateID: 12454498, // Replace with your Mailjet template ID
+          To: [{ Email: email, Name: `${name} ${surname}` }],
+          TemplateID: 12454498,
           TemplateLanguage: true,
           Variables: {
             first_name: `${name} ${surname}`,
             order_id: orderNumber,
-            comments: comments,
+            comments,
             total_price: formattedTotalPrice,
             order_items: orderItemsString,
           },
@@ -85,25 +82,16 @@ exports.handler = async (event) => {
       ],
     });
 
-    await request;
-
-    // Return a success response
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": allowedOrigin,
-      },
+      headers: corsHeaders,
       body: JSON.stringify({ message: "Email sent successfully!" }),
     };
   } catch (error) {
     console.error("Error sending email:", error);
-
-    // Return an error response
     return {
       statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": allowedOrigin,
-      },
+      headers: corsHeaders, // ✅ ensure headers on error too
       body: JSON.stringify({ error: error.message || "Failed to send email" }),
     };
   }
