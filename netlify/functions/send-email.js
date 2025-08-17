@@ -106,7 +106,7 @@ exports.handler = async (event) => {
           },
           Variables: {
             order_id: orderNumber,
-            comments,
+            comments: comments || "Без коментарів",
             total_price: formattedTotalPrice,
             order_items: orderItemsString,
           },
