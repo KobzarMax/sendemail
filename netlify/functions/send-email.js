@@ -1,6 +1,6 @@
 const Mailjet = require("node-mailjet");
 
-const mailjet = Mailjet.connect(
+const mailjet = Mailjet.apiConnect(
   process.env.MJ_APIKEY_PUBLIC,
   process.env.MJ_APIKEY_PRIVATE
 );
@@ -11,21 +11,18 @@ const allowedOrigins = [
 ];
 
 function getCorsHeaders(origin) {
-  const headers = {
-    "Access-Control-Allow-Headers": "*",
+  const allowedOrigin = allowedOrigins.includes(origin)
+    ? origin
+    : allowedOrigins[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
-
-  if (allowedOrigins.includes(origin)) {
-    headers["Access-Control-Allow-Origin"] = origin;
-  }
-
-  return headers;
 }
 
 exports.handler = async (event) => {
-  const origin = event.headers.origin;
+  const origin = event.headers.origin || "";
   const corsHeaders = getCorsHeaders(origin);
 
   // Preflight OPTIONS
@@ -43,14 +40,6 @@ exports.handler = async (event) => {
       statusCode: 405,
       headers: corsHeaders,
       body: JSON.stringify({ message: "Method Not Allowed" }),
-    };
-  }
-
-  // Block non-allowed origins
-  if (!allowedOrigins.includes(origin)) {
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ message: "Forbidden" }),
     };
   }
 
@@ -103,7 +92,7 @@ exports.handler = async (event) => {
     console.error("Error sending email:", error);
     return {
       statusCode: 500,
-      headers: corsHeaders,
+      headers: corsHeaders, // ✅ ensure headers on error too
       body: JSON.stringify({ error: error.message || "Failed to send email" }),
     };
   }
