@@ -10,20 +10,16 @@ const allowedOrigins = [
   "https://www.lesenok.ua",
 ];
 
-function getCorsHeaders(origin) {
-  const allowedOrigin = allowedOrigins.includes(origin)
-    ? origin
-    : allowedOrigins[0];
+function getCorsHeaders() {
   return {
-    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
 
 exports.handler = async (event) => {
-  const origin = event.headers.origin || "";
-  const corsHeaders = getCorsHeaders(origin);
+  const corsHeaders = getCorsHeaders();
 
   // Preflight OPTIONS
   if (event.httpMethod === "OPTIONS") {
@@ -70,6 +66,7 @@ exports.handler = async (event) => {
           },
           To: [{ Email: email, Name: `${name} ${surname}` }],
           TemplateID: 12454498,
+          Subject: `Замовлення #${orderNumber}`,
           TemplateLanguage: true,
           Variables: {
             first_name: `${name} ${surname}`,
