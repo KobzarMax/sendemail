@@ -1,10 +1,19 @@
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const Mailjet = require("node-mailjet");
+
+const mailjet = Mailjet.apiConnect(
+  process.env.MJ_APIKEY_PUBLIC,
+  process.env.MJ_APIKEY_PRIVATE
+);
 
 exports.handler = async (event) => {
-  const allowedOrigins = ["https://lesenokbags-ua.webflow.io", "https://www.lesenok.ua"];
+  const allowedOrigins = [
+    "https://lesenokbags-ua.webflow.io",
+    "https://www.lesenok.ua",
+  ];
   const origin = event.headers.origin;
-  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  const allowedOrigin = allowedOrigins.includes(origin)
+    ? origin
+    : allowedOrigins[0];
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === "OPTIONS") {
@@ -32,18 +41,40 @@ exports.handler = async (event) => {
 
   try {
     // Parse the request body
-    const { email, name, surname, orderNumber, formattedTotalPrice, formattedOrderItems, comments } = JSON.parse(event.body);
+    const {
+      email,
+      name,
+      surname,
+      orderNumber,
+      formattedTotalPrice,
+      formattedOrderItems,
+      comments,
+    } = JSON.parse(event.body);
 
     const orderItemsString = formattedOrderItems
-      .map(item => `• ${item.itemName}, - ${item.itemQuantity} x ${item.itemPrice}`)
+      .map(
+        (item) =>
+          `• ${item.itemName}, - ${item.itemQuantity} x ${item.itemPrice}`
+      )
       .join("\n");
 
-    // Construct the email message
-    const msg = {
-      personalizations: [
+    // Construct Mailjet message
+    const request = mailjet.post("send", { version: "v3.1" }).request({
+      Messages: [
         {
-          to: [{ email }],
-          dynamic_template_data: {
+          From: {
+            Email: "lesenokbags@gmail.com",
+            Name: "Lesenok Bags",
+          },
+          To: [
+            {
+              Email: email,
+              Name: `${name} ${surname}`,
+            },
+          ],
+          TemplateID: 12454498, // Replace with your Mailjet template ID
+          TemplateLanguage: true,
+          Variables: {
             first_name: `${name} ${surname}`,
             order_id: orderNumber,
             comments: comments,
@@ -52,12 +83,9 @@ exports.handler = async (event) => {
           },
         },
       ],
-      from: { email: 'lesenokbags@gmail.com' },
-      template_id: 'd-94b1142e7c0e4e9dbacb9cb7ce646514', // Replace with your actual SendGrid template ID
-    };
+    });
 
-    // Send the email
-    await sgMail.send(msg);
+    await request;
 
     // Return a success response
     return {
@@ -65,18 +93,18 @@ exports.handler = async (event) => {
       headers: {
         "Access-Control-Allow-Origin": allowedOrigin,
       },
-      body: JSON.stringify({ message: 'Email sent successfully!' }),
+      body: JSON.stringify({ message: "Email sent successfully!" }),
     };
   } catch (error) {
     console.error("Error sending email:", error);
 
     // Return an error response
     return {
-      statusCode: error.code || 500,
+      statusCode: 500,
       headers: {
         "Access-Control-Allow-Origin": allowedOrigin,
       },
-      body: JSON.stringify({ error: error.message || 'Failed to send email' }),
+      body: JSON.stringify({ error: error.message || "Failed to send email" }),
     };
   }
 };
