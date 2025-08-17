@@ -101,8 +101,10 @@ exports.handler = async (event) => {
           To: [{ Email: email, Name: `${name} ${surname}` }],
           TemplateID: 12454498,
           TemplateLanguage: true,
+          Data: {
+            firstname: `${name} ${surname}`,
+          },
           Variables: {
-            first_name: `${name} ${surname}`,
             order_id: orderNumber,
             comments,
             total_price: formattedTotalPrice,
